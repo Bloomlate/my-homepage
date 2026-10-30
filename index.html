@@ -157,6 +157,108 @@
       color: var(--ink);
     }
 
+
+    /* ---------- 카드 5개 ---------- */
+    .categories { padding-top: 0; }
+    .section-title {
+      margin: 0 0 12px;
+      font-family: var(--font-title);
+      font-size: clamp(30px, 3.2vw, 40px);
+      font-weight: 700;
+      line-height: 1.3;
+    }
+    .section-desc { margin: 0 0 40px; color: var(--taupe); }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 20px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      height: 100%;
+      min-height: 240px;
+      padding: 28px 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      text-decoration: none;
+      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+    .card:hover,
+    .card:focus-visible {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+      box-shadow: 0 12px 28px rgba(60,45,30,0.10);
+      outline: none;
+    }
+    .card .num {
+      font-family: var(--font-title);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .card .icon {
+      width: 44px;
+      height: 44px;
+      color: var(--taupe);
+    }
+    .card h3 {
+      margin: 4px 0 0;
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+    .card p { margin: 0; font-size: 18px; color: var(--taupe); line-height: 1.6; }
+    .card .go { margin-top: auto; font-size: 18px; color: var(--accent); }
+
+    /* ---------- 분류별 자료 목록 ---------- */
+    .library { background: var(--paper); border-top: 1px solid var(--line); }
+    .shelf {
+      padding: 48px 0;
+      border-bottom: 1px solid var(--line);
+      scroll-margin-top: 24px;
+    }
+    .shelf:first-of-type { padding-top: 0; }
+    .shelf:last-of-type { border-bottom: 0; padding-bottom: 0; }
+    .shelf-head {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      margin-bottom: 20px;
+    }
+    .shelf-head h3 { margin: 0; font-size: 28px; font-weight: 700; }
+    .shelf-head .num { font-family: var(--font-title); color: var(--accent); font-size: 22px; font-weight: 700; }
+    .shelf-head .back { margin-left: auto; font-size: 18px; color: var(--taupe); }
+    .items { margin: 0; padding: 0; list-style: none; }
+    .items li { padding: 14px 0; border-top: 1px dashed var(--line); }
+    .items li:first-child { border-top: 0; }
+    .items .date { display: block; font-size: 18px; color: var(--taupe); }
+    .empty {
+      margin: 0;
+      padding: 28px 24px;
+      background: var(--beige);
+      border-radius: 12px;
+      color: var(--taupe);
+      text-align: center;
+    }
+    .shelf:target .shelf-head h3 { color: var(--accent); }
+
+    /* ---------- 푸터 ---------- */
+    .footer {
+      padding: 32px 40px;
+      background: var(--ink);
+      color: #cfc5b8;
+      font-size: 18px;
+      text-align: center;
+    }
+    .footer p { margin: 0; }
+
     /* ---------- 반응형 ---------- */
     @media (max-width: 640px) {
       body { font-size: 18px; }
@@ -164,6 +266,11 @@
       .topbar nav a { padding: 6px 14px; }
       .hero { padding: 104px 20px 72px; }
       .section { padding: 80px 20px; }
+      .categories { padding-top: 0; }
+      .cards { grid-template-columns: 1fr; gap: 14px; }
+      .card { min-height: 0; padding: 24px 20px; }
+      .shelf-head .back { margin-left: 0; width: 100%; }
+      .footer { padding: 28px 20px; }
     }
   </style>
 </head>
@@ -189,7 +296,26 @@
         <p data-site="intro"></p>
       </div>
     </section>
+    <section class="section categories" id="categories" aria-labelledby="cat-title">
+      <div class="wrap">
+        <h2 class="section-title" id="cat-title">자료 분류</h2>
+        <p class="section-desc">카드를 누르면 그 분류의 자료 목록으로 이동합니다.</p>
+        <ul class="cards" id="cards"></ul>
+      </div>
+    </section>
+
+    <section class="section library" id="library" aria-labelledby="lib-title">
+      <div class="wrap">
+        <h2 class="section-title" id="lib-title">자료 목록</h2>
+        <p class="section-desc">분류별로 모아 둔 자료입니다.</p>
+        <div id="shelves"></div>
+      </div>
+    </section>
   </main>
+
+  <footer class="footer">
+    <p><span data-site="title"></span> · 오늘은 <time id="today"></time></p>
+  </footer>
 
   <script>
     /* =========================================================
@@ -202,10 +328,69 @@
            + "필요할 때 천천히 꺼내 읽고, 새로 알게 된 것은 조금씩 더해 갑니다."
     };
 
+    /* =========================================================
+       분류와 자료 (자료를 넣을 때는 items 에 한 줄씩 추가)
+       예) items: [ { title: "혈압 관리 요령", date: "2026-10-30", link: "https://..." } ]
+       link 는 없어도 됩니다.
+       ========================================================= */
+    const CATEGORIES = [
+      { id: "health",  name: "건강", desc: "몸과 마음을 돌보는 정보",       icon: "heart",  items: [] },
+      { id: "sales",   name: "영업", desc: "현장에서 쓰는 영업 노하우",     icon: "brief",  items: [] },
+      { id: "study",   name: "학업", desc: "공부하며 정리한 내용",           icon: "book",   items: [] },
+      { id: "hobby",   name: "취미", desc: "즐겁게 배우고 모은 것들",        icon: "leaf",   items: [] },
+      { id: "etc",     name: "기타", desc: "어디에도 넣기 애매한 자료",      icon: "box",    items: [] }
+    ];
+
     document.title = SITE.title;
     document.querySelectorAll("[data-site]").forEach(function (el) {
       el.textContent = SITE[el.dataset.site];
     });
+
+    const ICONS = {
+      heart: '<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>',
+      brief: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 13h18"/>',
+      book:  '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5M8 7h7"/>',
+      leaf:  '<path d="M5 19C5 10 11 5 20 4c-1 9-6 15-15 15z"/><path d="M5 19l8-8"/>',
+      box:   '<path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/>'
+    };
+
+    function esc(text) {
+      const d = document.createElement("div");
+      d.textContent = text == null ? "" : String(text);
+      return d.innerHTML;
+    }
+    function pad(n) { return String(n).padStart(2, "0"); }
+
+    document.getElementById("cards").innerHTML = CATEGORIES.map(function (c, i) {
+      return '<li><a class="card" href="#list-' + c.id + '">'
+        + '<span class="num">' + pad(i + 1) + '</span>'
+        + '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[c.icon] + '</svg>'
+        + '<h3>' + esc(c.name) + '</h3>'
+        + '<p>' + esc(c.desc) + '</p>'
+        + '<span class="go">자료 보기 →</span>'
+        + '</a></li>';
+    }).join("");
+
+    document.getElementById("shelves").innerHTML = CATEGORIES.map(function (c, i) {
+      const list = c.items.length
+        ? '<ul class="items">' + c.items.map(function (it) {
+            const title = it.link
+              ? '<a href="' + esc(it.link) + '" target="_blank" rel="noopener">' + esc(it.title) + '</a>'
+              : esc(it.title);
+            return '<li>' + title + (it.date ? '<span class="date">' + esc(it.date) + '</span>' : '') + '</li>';
+          }).join("") + '</ul>'
+        : '<p class="empty">아직 자료가 없어요. 자료가 생기면 이곳에 차곡차곡 쌓입니다.</p>';
+      return '<article class="shelf" id="list-' + c.id + '">'
+        + '<div class="shelf-head"><span class="num">' + pad(i + 1) + '</span>'
+        + '<h3>' + esc(c.name) + '</h3>'
+        + '<a class="back" href="#categories">↑ 분류로 돌아가기</a></div>'
+        + list + '</article>';
+    }).join("");
+
+    const now = new Date();
+    const todayEl = document.getElementById("today");
+    todayEl.dateTime = now.getFullYear() + "-" + pad(now.getMonth() + 1) + "-" + pad(now.getDate());
+    todayEl.textContent = now.getFullYear() + "년 " + (now.getMonth() + 1) + "월 " + now.getDate() + "일";
   </script>
 </body>
 </html>
