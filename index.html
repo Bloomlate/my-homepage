@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>조용한 서재</title>
+  <style>
+    /* =========================================================
+       색·글꼴·배경 이미지 설정 (여기만 바꾸면 전체에 적용)
+       ---------------------------------------------------------
+       사진으로 바꾸려면 --hero-image 를 아래처럼 바꾸세요.
+       --hero-image: url("images/hero.jpg");
+       ========================================================= */
+    :root {
+      --hero-image: none;
+
+      --ink: #1f1c19;          /* 검정 (글자) */
+      --taupe: #6b6158;        /* 회갈색 (보조 글자) */
+      --beige: #f3ece2;        /* 밝은 베이지 (바탕) */
+      --paper: #fbf8f3;        /* 카드 바탕 */
+      --line: #ddd2c3;         /* 테두리 */
+      --accent: #9a5b3c;       /* 포인트 색 (하나만) */
+
+      --font: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕",
+              "Noto Sans KR", "Nanum Gothic", sans-serif;
+      --font-title: "Nanum Myeongjo", "AppleMyungjo", "Batang", "바탕", serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: var(--font);
+      font-size: 19px;
+      line-height: 1.75;
+      color: var(--ink);
+      background: var(--beige);
+      word-break: keep-all;
+      overflow-wrap: break-word;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    a { color: inherit; }
+
+    /* ---------- 상단 메뉴 ---------- */
+    .topbar {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 24px 40px;
+      color: #fff;
+    }
+    .topbar .brand {
+      font-family: var(--font-title);
+      font-size: 20px;
+      font-weight: 700;
+      text-decoration: none;
+      letter-spacing: 0.02em;
+    }
+    .topbar nav a {
+      font-size: 18px;
+      text-decoration: none;
+      padding: 8px 16px;
+      border: 1px solid rgba(255,255,255,0.6);
+      border-radius: 999px;
+    }
+    .topbar nav a:hover,
+    .topbar nav a:focus-visible { background: rgba(255,255,255,0.15); }
+
+    /* ---------- 첫 화면 ---------- */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      min-height: 100svh;
+      display: flex;
+      align-items: flex-end;
+      padding: 120px 40px 96px;
+      color: #fff;
+      overflow: hidden;
+      /* 사진이 없을 때 쓰는 기본 배경: 따뜻한 그라데이션 */
+      background:
+        radial-gradient(ellipse at 20% 15%, rgba(214,190,160,0.55), transparent 55%),
+        radial-gradient(ellipse at 85% 80%, rgba(154,91,60,0.45), transparent 60%),
+        linear-gradient(160deg, #5c5148 0%, #3a332d 55%, #24201c 100%);
+    }
+    /* 사진 자리 (--hero-image 가 지정되면 사진이 보임) */
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: var(--hero-image);
+      background-size: cover;
+      background-position: center;
+    }
+    /* 종이 질감 + 아래쪽 어둡게 (글자가 잘 보이도록) */
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.08 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+        linear-gradient(to top, rgba(20,17,14,0.55), rgba(20,17,14,0) 60%);
+    }
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .hero h1 {
+      margin: 0 0 20px;
+      font-family: var(--font-title);
+      font-size: clamp(48px, 9vw, 120px);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+    }
+    .hero p {
+      margin: 0;
+      font-size: clamp(20px, 2.2vw, 26px);
+      color: rgba(255,255,255,0.88);
+    }
+    .scroll-hint {
+      display: inline-block;
+      margin-top: 40px;
+      font-size: 18px;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(255,255,255,0.6);
+      padding-bottom: 4px;
+    }
+
+    /* ---------- 공통 영역 ---------- */
+    .section { padding: 112px 40px; }
+    .wrap { max-width: 1200px; margin: 0 auto; }
+
+    /* ---------- 소개 ---------- */
+    .intro { text-align: center; }
+    .intro .eyebrow {
+      display: block;
+      margin-bottom: 20px;
+      font-size: 18px;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+    }
+    .intro p {
+      max-width: 760px;
+      margin: 0 auto;
+      font-size: clamp(21px, 2.1vw, 26px);
+      line-height: 1.85;
+      color: var(--ink);
+    }
+
+    /* ---------- 반응형 ---------- */
+    @media (max-width: 640px) {
+      body { font-size: 18px; }
+      .topbar { padding: 18px 20px; }
+      .topbar nav a { padding: 6px 14px; }
+      .hero { padding: 104px 20px 72px; }
+      .section { padding: 80px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <a class="brand" href="#top" data-site="title"></a>
+    <nav aria-label="주 메뉴"><a href="#categories">자료 분류</a></nav>
+  </header>
+
+  <main id="top">
+    <section class="hero" aria-label="첫 화면">
+      <div class="hero-inner">
+        <h1 data-site="title"></h1>
+        <p data-site="tagline"></p>
+        <a class="scroll-hint" href="#intro">아래로 둘러보기 ↓</a>
+      </div>
+    </section>
+
+    <section class="section intro" id="intro">
+      <div class="wrap">
+        <span class="eyebrow">ABOUT</span>
+        <p data-site="intro"></p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    /* =========================================================
+       문구 설정 (제목·설명·소개는 여기서만 바꾸면 됩니다)
+       ========================================================= */
+    const SITE = {
+      title: "조용한 서재",
+      tagline: "모아 둔 자료를 차분히 꺼내 보는 나만의 공간",
+      intro: "건강, 영업, 학업, 취미까지 그동안 모은 자료를 한곳에 정리해 두었습니다. "
+           + "필요할 때 천천히 꺼내 읽고, 새로 알게 된 것은 조금씩 더해 갑니다."
+    };
+
+    document.title = SITE.title;
+    document.querySelectorAll("[data-site]").forEach(function (el) {
+      el.textContent = SITE[el.dataset.site];
+    });
+  </script>
+</body>
+</html>
