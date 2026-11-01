@@ -1,455 +1,212 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>조용한 서재</title>
-  <style>
-    /* =========================================================
-       색·글꼴 설정 (여기만 바꾸면 전체에 적용)
-       ---------------------------------------------------------
-       첫 화면 배경 사진 주소는 아래 <script> 의 HERO_PHOTOS 에 있습니다.
-       ========================================================= */
-    :root {
-      --ink: #1f1c19;          /* 검정 (글자) */
-      --taupe: #6b6158;        /* 회갈색 (보조 글자) */
-      --beige: #f3ece2;        /* 밝은 베이지 (바탕) */
-      --paper: #fbf8f3;        /* 카드 바탕 */
-      --line: #ddd2c3;         /* 테두리 */
-      --accent: #9a5b3c;       /* 포인트 색 (하나만) */
-
-      --font: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕",
-              "Noto Sans KR", "Nanum Gothic", sans-serif;
-      --font-title: "Nanum Myeongjo", "AppleMyungjo", "Batang", "바탕", serif;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      margin: 0;
-      font-family: var(--font);
-      font-size: 19px;
-      line-height: 1.75;
-      color: var(--ink);
-      background: var(--beige);
-      word-break: keep-all;
-      overflow-wrap: break-word;
-      -webkit-text-size-adjust: 100%;
-    }
-
-    a { color: inherit; }
-
-    /* ---------- 상단 메뉴 ---------- */
-    .topbar {
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      z-index: 10;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      padding: 24px 40px;
-      color: #fff;
-    }
-    .topbar .brand {
-      font-family: var(--font-title);
-      font-size: 20px;
-      font-weight: 700;
-      text-decoration: none;
-      letter-spacing: 0.02em;
-    }
-    .topbar nav a {
-      font-size: 18px;
-      text-decoration: none;
-      padding: 8px 16px;
-      border: 1px solid rgba(255,255,255,0.6);
-      border-radius: 999px;
-    }
-    .topbar nav a:hover,
-    .topbar nav a:focus-visible { background: rgba(255,255,255,0.15); }
-
-    /* ---------- 첫 화면 ---------- */
-    .hero {
-      position: relative;
-      min-height: 100vh;
-      min-height: 100svh;
-      display: flex;
-      align-items: flex-end;
-      padding: 120px 40px 96px;
-      color: #fff;
-      overflow: hidden;
-      /* 사진이 없을 때 쓰는 기본 배경: 따뜻한 그라데이션 */
-      background:
-        radial-gradient(ellipse at 20% 15%, rgba(214,190,160,0.55), transparent 55%),
-        radial-gradient(ellipse at 85% 80%, rgba(154,91,60,0.45), transparent 60%),
-        linear-gradient(160deg, #5c5148 0%, #3a332d 55%, #24201c 100%);
-    }
-    /* 배경 사진 (HERO_PHOTOS 에서 만들어짐, 바뀔 때 부드럽게 겹쳐 전환) */
-    .hero-photo {
-      position: absolute;
-      inset: 0;
-      background-size: cover;
-      background-position: center;
-      opacity: 0;
-      transition: opacity 0.9s ease;
-    }
-    .hero-photo.is-on { opacity: 1; }
-    /* 종이 질감 + 사진 위 옅은 어두운 막 + 아래쪽 어둡게 (글자가 잘 보이도록) */
-    .hero::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background:
-        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.08 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
-        linear-gradient(to top, rgba(20,17,14,0.55), rgba(20,17,14,0) 60%),
-        linear-gradient(rgba(20,17,14,0.28), rgba(20,17,14,0.28));
-    }
-    .hero-inner {
-      position: relative;
-      z-index: 1;
-      max-width: 1200px;
-      width: 100%;
-      margin: 0 auto;
-    }
-    .hero h1 {
-      margin: 0 0 20px;
-      font-family: var(--font-title);
-      font-size: clamp(48px, 9vw, 120px);
-      font-weight: 700;
-      line-height: 1.15;
-      letter-spacing: -0.01em;
-    }
-    .hero p {
-      margin: 0;
-      font-size: clamp(20px, 2.2vw, 26px);
-      color: rgba(255,255,255,0.88);
-    }
-    .scroll-hint {
-      display: inline-block;
-      margin-top: 40px;
-      font-size: 18px;
-      text-decoration: none;
-      border-bottom: 1px solid rgba(255,255,255,0.6);
-      padding-bottom: 4px;
-    }
-
-    /* ---------- 공통 영역 ---------- */
-    .section { padding: 112px 40px; }
-    .wrap { max-width: 1200px; margin: 0 auto; }
-
-    /* ---------- 소개 ---------- */
-    .intro { text-align: center; }
-    .intro .eyebrow {
-      display: block;
-      margin-bottom: 20px;
-      font-size: 18px;
-      color: var(--accent);
-      letter-spacing: 0.1em;
-    }
-    .intro p {
-      max-width: 760px;
-      margin: 0 auto;
-      font-size: clamp(21px, 2.1vw, 26px);
-      line-height: 1.85;
-      color: var(--ink);
-    }
-
-
-    /* ---------- 카드 5개 ---------- */
-    .categories { padding-top: 0; }
-    .section-title {
-      margin: 0 0 12px;
-      font-family: var(--font-title);
-      font-size: clamp(30px, 3.2vw, 40px);
-      font-weight: 700;
-      line-height: 1.3;
-    }
-    .section-desc { margin: 0 0 40px; color: var(--taupe); }
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 20px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-    .card {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      height: 100%;
-      min-height: 240px;
-      padding: 28px 24px;
-      background: var(--paper);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      text-decoration: none;
-      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
-    }
-    .card:hover,
-    .card:focus-visible {
-      transform: translateY(-4px);
-      border-color: var(--accent);
-      box-shadow: 0 12px 28px rgba(60,45,30,0.10);
-      outline: none;
-    }
-    .card .num {
-      font-family: var(--font-title);
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--accent);
-    }
-    .card .icon {
-      width: 44px;
-      height: 44px;
-      color: var(--taupe);
-    }
-    .card h3 {
-      margin: 4px 0 0;
-      font-size: 26px;
-      font-weight: 700;
-      line-height: 1.3;
-    }
-    .card p { margin: 0; font-size: 18px; color: var(--taupe); line-height: 1.6; }
-    .card .go { margin-top: auto; font-size: 18px; color: var(--accent); }
-
-    /* ---------- 분류별 자료 목록 ---------- */
-    .library { background: var(--paper); border-top: 1px solid var(--line); }
-    .shelf {
-      padding: 48px 0;
-      border-bottom: 1px solid var(--line);
-      scroll-margin-top: 24px;
-    }
-    .shelf:first-of-type { padding-top: 0; }
-    .shelf:last-of-type { border-bottom: 0; padding-bottom: 0; }
-    .shelf-head {
-      display: flex;
-      align-items: baseline;
-      flex-wrap: wrap;
-      gap: 8px 16px;
-      margin-bottom: 20px;
-    }
-    .shelf-head h3 { margin: 0; font-size: 28px; font-weight: 700; }
-    .shelf-head .num { font-family: var(--font-title); color: var(--accent); font-size: 22px; font-weight: 700; }
-    .shelf-head .back { margin-left: auto; font-size: 18px; color: var(--taupe); }
-    .items { margin: 0; padding: 0; list-style: none; }
-    .items li { padding: 14px 0; border-top: 1px dashed var(--line); }
-    .items li:first-child { border-top: 0; }
-    .items .date { display: block; font-size: 18px; color: var(--taupe); }
-    .empty {
-      margin: 0;
-      padding: 28px 24px;
-      background: var(--beige);
-      border-radius: 12px;
-      color: var(--taupe);
-      text-align: center;
-    }
-    .shelf:target .shelf-head h3 { color: var(--accent); }
-
-    /* ---------- 푸터 ---------- */
-    .footer {
-      padding: 32px 40px;
-      background: var(--ink);
-      color: #cfc5b8;
-      font-size: 18px;
-      text-align: center;
-    }
-    .footer p { margin: 0; }
-
-    /* ---------- 반응형 ---------- */
-    @media (max-width: 640px) {
-      body { font-size: 18px; }
-      .topbar { padding: 18px 20px; }
-      .topbar nav a { padding: 6px 14px; }
-      .hero { padding: 104px 20px 72px; }
-      .section { padding: 80px 20px; }
-      .categories { padding-top: 0; }
-      .cards { grid-template-columns: 1fr; gap: 14px; }
-      .card { min-height: 0; padding: 24px 20px; }
-      .shelf-head .back { margin-left: 0; width: 100%; }
-      .footer { padding: 28px 20px; }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>조용한 서재</title>
+<style>
+/* 색·글꼴 (문구·사진·자료는 data.js 에서 바꿉니다) */
+:root{--ink:#1f1c19;--taupe:#6b6158;--beige:#f3ece2;--paper:#fbf8f3;--line:#ddd2c3;--acc:#9a5b3c;
+--font:"Pretendard","Apple SD Gothic Neo","Malgun Gothic","맑은 고딕","Noto Sans KR","Nanum Gothic",sans-serif;
+--serif:"Nanum Myeongjo","AppleMyungjo","Batang","바탕",serif}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{font:19px/1.75 var(--font);color:var(--ink);background:var(--beige);word-break:keep-all;overflow-wrap:break-word;-webkit-text-size-adjust:100%}
+a{color:inherit;text-decoration:none;cursor:pointer}
+button,input,select,textarea{font:inherit;color:inherit}
+header{position:fixed;top:0;left:0;right:0;z-index:20;height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:#fbf8f3ee;backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+header .ic{background:none;border:0;font-size:26px;line-height:1;cursor:pointer;padding:10px 12px;border-radius:10px;transition:.2s}
+header .ic:hover{background:#efe6d9}
+header .all{font-size:18px;font-weight:700;border:1px solid var(--line);border-radius:99px;padding:6px 14px}
+header .logo{position:absolute;left:50%;transform:translateX(-50%);font:700 22px var(--serif);white-space:nowrap}
+#drawer{position:fixed;inset:0;z-index:30;pointer-events:none}
+#drawer .bg{position:absolute;inset:0;background:#0006;opacity:0;transition:.3s}
+#drawer .pn{position:absolute;top:0;bottom:0;left:0;width:min(340px,86vw);background:var(--paper);transform:translateX(-100%);transition:.3s;padding:24px 28px;overflow:auto}
+#drawer.open{pointer-events:auto}#drawer.open .bg{opacity:1}#drawer.open .pn{transform:none}
+#drawer .x{font-size:32px;line-height:1;background:none;border:0;cursor:pointer;margin-bottom:12px;padding:4px 8px}
+.mi{border-bottom:1px solid var(--line)}
+.mi>button,.mi>a{all:unset;box-sizing:border-box;width:100%;display:flex;justify-content:space-between;padding:16px 2px;font-size:20px;font-weight:700;cursor:pointer}
+.mi>button:hover,.mi>a:hover{color:var(--acc)}
+.mi .pm:after{content:"+"}.mi.open .pm:after{content:"−"}
+.mi .sub{max-height:0;overflow:hidden;transition:max-height .3s;padding-left:14px}
+.mi.open .sub{max-height:500px;padding-bottom:10px}
+.sub a{display:block;padding:7px 0;font-size:19px;color:var(--taupe)}.sub a:hover{color:var(--acc)}
+main{padding-top:68px;min-height:70vh}
+/* 첫 화면 */
+.hero{position:relative;height:calc(100vh - 68px);height:calc(100svh - 68px);min-height:460px;overflow:hidden;color:#fff;
+background:radial-gradient(ellipse at 20% 15%,rgba(214,190,160,.55),transparent 55%),radial-gradient(ellipse at 85% 80%,rgba(154,91,60,.45),transparent 60%),linear-gradient(160deg,#5c5148,#3a332d 55%,#24201c)}
+.slide{position:absolute;inset:0;opacity:0;transition:opacity 1.2s;background-size:cover;background-position:center}
+.slide.on{opacity:1}
+.hero:after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(20,17,14,.55),rgba(20,17,14,0) 60%),rgba(20,17,14,.28)}
+.hero .txt{position:absolute;z-index:1;left:0;right:0;bottom:96px;max-width:1200px;margin:0 auto;padding:0 40px}
+.hero h1{font:700 clamp(48px,9vw,120px)/1.15 var(--serif);letter-spacing:-.01em;margin-bottom:20px}
+.hero p{font-size:clamp(20px,2.2vw,26px);color:#ffffffe0}
+.dots{position:absolute;z-index:2;right:40px;bottom:32px;display:flex;gap:8px}
+.dots button{width:44px;height:44px;border-radius:50%;border:1px solid #ffffffb3;background:#14110e59;color:#fff;font-weight:700;font-size:18px;cursor:pointer}
+.dots button.on{background:#fff;color:var(--ink)}
+.intro{text-align:center;padding:112px 24px 72px}
+.intro small{display:block;color:var(--acc);font-size:18px;letter-spacing:.1em;margin-bottom:20px}
+.intro p{max-width:760px;margin:0 auto;font-size:clamp(21px,2.1vw,26px);line-height:1.85}
+/* 분류 카드 */
+.wrap{max-width:1200px;margin:0 auto;padding:0 40px}
+.h2{font:700 clamp(30px,3.2vw,40px)/1.3 var(--serif);margin-bottom:12px}
+.desc{color:var(--taupe);margin-bottom:40px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:20px;padding-bottom:112px}
+.card{display:flex;flex-direction:column;gap:12px;min-height:240px;padding:28px 24px;background:var(--paper);border:1px solid var(--line);border-radius:14px;transition:transform .2s,border-color .2s,box-shadow .2s}
+.card:hover,.card:focus-visible{transform:translateY(-4px);border-color:var(--acc);box-shadow:0 12px 28px #3c2d1e1a;outline:none}
+.num{font:700 22px var(--serif);color:var(--acc)}
+.card svg{width:44px;height:44px;color:var(--taupe)}
+.card h3{font-size:26px;line-height:1.3;margin-top:4px}
+.card p{font-size:18px;color:var(--taupe);line-height:1.6}
+.card .go{margin-top:auto;font-size:18px;color:var(--acc)}
+/* 안내 아코디언 */
+.faq{background:var(--paper);border-top:1px solid var(--line);padding:96px 0 112px}
+.faq .in{max-width:900px;margin:0 auto;padding:0 24px}
+.q{border-top:1px solid var(--line)}.q:last-child{border-bottom:1px solid var(--line)}
+.q button{all:unset;box-sizing:border-box;width:100%;display:flex;gap:20px;padding:22px 4px;cursor:pointer;font-size:20px;font-weight:700;transition:.2s}
+.q button:hover{color:var(--acc)}
+.q em{font:700 18px var(--serif);color:var(--acc);padding-top:3px;font-style:normal}
+.q .a{max-height:0;overflow:hidden;transition:max-height .35s;color:var(--taupe);padding:0 4px 0 48px;font-size:19px}
+.q.open .a{max-height:400px;padding-bottom:22px}
+/* 버튼 */
+.btn{display:inline-block;margin-top:24px;border:1px solid var(--ink);background:var(--paper);padding:12px 30px;border-radius:99px;font-size:18px;font-weight:700;transition:.2s;cursor:pointer}
+.btn:hover,.btn.f{background:var(--ink);color:#fff}.btn.f:hover{background:var(--acc);border-color:var(--acc)}
+/* 분류 페이지 */
+.page{max-width:1000px;margin:0 auto;padding:64px 24px 100px}
+.page h1{font:700 clamp(34px,5vw,48px)/1.25 var(--serif);text-align:center;margin-bottom:8px}
+.page .sub1{text-align:center;color:var(--taupe);margin-bottom:36px}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:36px}
+.tabs a{padding:8px 20px;border-radius:99px;border:1px solid var(--line);background:var(--paper);font-size:18px;transition:.2s}
+.tabs a:hover{border-color:var(--acc)}.tabs a.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.list{list-style:none;padding:0;background:var(--paper);border:1px solid var(--line);border-radius:14px}
+.list li+li{border-top:1px solid var(--line)}
+.list a{display:block;padding:18px 22px;transition:.2s}
+.list a:hover{background:#f5ede1}
+.list b{display:block;font-size:20px}
+.list span{display:block;font-size:18px;color:var(--taupe)}
+.list .tag,.tag{display:inline-block;padding:0 10px;border-radius:99px;background:#efe3d3;color:var(--acc);font-size:18px}
+.empty{padding:28px 24px;background:var(--paper);border:1px solid var(--line);border-radius:14px;color:var(--taupe);text-align:center}
+.bar{display:flex;justify-content:flex-end;margin-top:8px}
+.form{display:grid;gap:14px;margin-top:28px;padding:24px;background:var(--paper);border:1px solid var(--line);border-radius:14px}
+.form[hidden]{display:none}
+.form label{display:grid;gap:6px;font-size:18px;color:var(--taupe)}
+.form input,.form textarea{border:1px solid var(--line);border-radius:10px;padding:12px 14px;color:var(--ink);background:#fff;width:100%;min-width:0}
+.form input:focus,.form textarea:focus{outline:0;border-color:var(--acc)}
+.post h2{font-size:28px;line-height:1.4;margin-bottom:6px}
+.post .meta{color:var(--taupe);border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:24px}
+.post .link{display:inline-block;margin-bottom:20px;color:var(--acc);border-bottom:1px solid var(--acc);word-break:break-all}
+.pics{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:24px}
+.pics img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;cursor:zoom-in;background:var(--line)}
+/* 사진 크게 보기 */
+#lb{position:fixed;inset:0;z-index:50;background:#000e;display:none;align-items:center;justify-content:center}
+#lb.on{display:flex}
+#lb img{max-width:90vw;max-height:88vh;object-fit:contain}
+#lb button{position:absolute;background:#fff2;border:0;color:#fff;font-size:30px;width:56px;height:56px;border-radius:50%;cursor:pointer}
+#lb button:hover{background:#fff5}
+#lb .p{left:16px}#lb .n{right:16px}#lb .c{top:16px;right:16px}
+#lb span{position:absolute;bottom:20px;color:#fffc;font-size:18px}
+footer{padding:32px 24px;background:var(--ink);color:#cfc5b8;font-size:18px;text-align:center}
+@media(max-width:640px){body{font-size:18px}header{padding:0 12px}header .logo{font-size:20px}
+.hero .txt{padding:0 20px;bottom:88px}.dots{right:20px;bottom:20px}.wrap{padding:0 20px}
+.cards{grid-template-columns:1fr;gap:14px;padding-bottom:80px}.card{min-height:0;padding:24px 20px}
+.intro{padding:80px 20px 56px}.faq{padding:72px 0 80px}.q .a{padding-left:4px}.form{padding:18px}}
+</style>
 </head>
 <body>
+<header>
+ <button class="ic" id="mbtn" aria-label="메뉴 열기">≡</button>
+ <a class="logo" href="#/" data-site="title"></a>
+ <a class="ic all" href="#/library/all">전체 자료</a>
+</header>
+<div id="drawer"><div class="bg"></div><div class="pn"><button class="x" id="mx" aria-label="메뉴 닫기">×</button><div id="menu"></div></div></div>
+<main id="app"></main>
+<div id="lb"><button class="c" aria-label="닫기">×</button><button class="p" aria-label="이전 사진">‹</button><img alt=""><button class="n" aria-label="다음 사진">›</button><span></span></div>
+<footer><span data-site="title"></span> · 오늘은 <time id="today"></time></footer>
+<script src="data.js"></script>
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const store={get:(k,d)=>{try{return JSON.parse(localStorage.getItem('ql_'+k))??d}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem('ql_'+k,JSON.stringify(v))}catch(e){}}};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pad=n=>String(n).padStart(2,'0'),fmt=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const CAT=Object.fromEntries(CATEGORIES.map(c=>[c.id,c]));
+const ICONS={
+heart:'<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>',
+brief:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 13h18"/>',
+book:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5M8 7h7"/>',
+leaf:'<path d="M5 19C5 10 11 5 20 4c-1 9-6 15-15 15z"/><path d="M5 19l8-8"/>',
+box:'<path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/>'};
+const icon=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[k]}</svg>`;
 
-  <header class="topbar">
-    <a class="brand" href="#top" data-site="title"></a>
-    <nav aria-label="주 메뉴"><a href="#categories">자료 분류</a></nav>
-  </header>
+document.title=SITE.title;
+$$('[data-site]').forEach(el=>el.textContent=SITE[el.dataset.site]);
+const now=new Date();$('#today').dateTime=fmt(now);$('#today').textContent=`${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일`;
 
-  <main id="top">
-    <section class="hero" id="hero" aria-label="첫 화면">
-      <div class="hero-inner">
-        <h1 data-site="title"></h1>
-        <p data-site="tagline"></p>
-        <a class="scroll-hint" href="#intro">아래로 둘러보기 ↓</a>
-      </div>
-    </section>
+/* 서랍 메뉴 */
+const NAV=[["처음 화면","#/"],["자료 분류",[["전체","library/all"]].concat(CATEGORIES.map(c=>[c.name,'library/'+c.id]))],["처음 쓰실 때","#/guide"]];
+$('#menu').innerHTML=NAV.map(([t,s])=>typeof s==='string'?`<div class="mi"><a href="${s}">${t}</a></div>`:`<div class="mi open"><button>${t}<span class="pm"></span></button><div class="sub">${s.map(([n,h])=>`<a href="#/${h}">${n}</a>`).join('')}</div></div>`).join('');
+$$('.mi>button').forEach(b=>b.onclick=()=>b.parentElement.classList.toggle('open'));
+const dr=$('#drawer'),openM=v=>dr.classList.toggle('open',v);
+$('#mbtn').onclick=()=>openM(true);$('#mx').onclick=()=>openM(false);$('.bg',dr).onclick=()=>openM(false);
+$$('a',dr).forEach(a=>a.addEventListener('click',()=>openM(false)));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')openM(false)});
 
-    <section class="section intro" id="intro">
-      <div class="wrap">
-        <span class="eyebrow">ABOUT</span>
-        <p data-site="intro"></p>
-      </div>
-    </section>
-    <section class="section categories" id="categories" aria-labelledby="cat-title">
-      <div class="wrap">
-        <h2 class="section-title" id="cat-title">자료 분류</h2>
-        <p class="section-desc">카드를 누르면 그 분류의 자료 목록으로 이동합니다.</p>
-        <ul class="cards" id="cards"></ul>
-      </div>
-    </section>
+/* 사진 크게 보기 */
+let LB=[],li=0;const lb=$('#lb');
+function showLB(list,i){LB=list;li=i;lb.classList.add('on');updLB()}
+function updLB(){$('img',lb).src=LB[li];$('span',lb).textContent=(li+1)+' / '+LB.length}
+$('.c',lb).onclick=()=>lb.classList.remove('on');
+$('.p',lb).onclick=()=>{li=(li-1+LB.length)%LB.length;updLB()};
+$('.n',lb).onclick=()=>{li=(li+1)%LB.length;updLB()};
+lb.onclick=e=>{if(e.target===lb)lb.classList.remove('on')};
+document.addEventListener('keydown',e=>{if(!lb.classList.contains('on'))return;if(e.key==='Escape')lb.classList.remove('on');if(e.key==='ArrowLeft')$('.p',lb).click();if(e.key==='ArrowRight')$('.n',lb).click()});
 
-    <section class="section library" id="library" aria-labelledby="lib-title">
-      <div class="wrap">
-        <h2 class="section-title" id="lib-title">자료 목록</h2>
-        <p class="section-desc">분류별로 모아 둔 자료입니다.</p>
-        <div id="shelves"></div>
-      </div>
-    </section>
-  </main>
+/* 첫 화면 사진 넘김 (번호 버튼으로 직접 고르면 자동 넘김은 멈춤) */
+let timer;
+function sliderInit(){clearInterval(timer);const s=$$('.slide'),d=$$('.dots button');if(!s.length)return;let n=0;
+const go=i=>{n=i;s.forEach((e,k)=>{if(k==i&&!e.style.backgroundImage)e.style.backgroundImage=`url("${e.dataset.src}")`;e.classList.toggle('on',k==i)});d.forEach((e,k)=>{e.classList.toggle('on',k==i);e.setAttribute('aria-pressed',k==i)})};
+go(0);d.forEach((e,i)=>e.onclick=()=>{go(i);clearInterval(timer)});if(s.length>1)timer=setInterval(()=>go((n+1)%s.length),4000)}
+function faqInit(){const f=$('#faq');if(!f)return;f.innerHTML=FAQ.map((x,i)=>`<div class="q${i?'':' open'}"><button><em>0${i+1}</em>${esc(x[0])}</button><div class="a">${esc(x[1])}</div></div>`).join('');$$('.q button',f).forEach(b=>b.onclick=()=>b.parentElement.classList.toggle('open'))}
 
-  <footer class="footer">
-    <p><span data-site="title"></span> · 오늘은 <time id="today"></time></p>
-  </footer>
+/* 자료: 이 브라우저에서 추가한 자료 + data.js 의 items */
+const local=id=>store.get('items_'+id,[]);
+const items=id=>local(id).concat(CAT[id].items.map(x=>({...x,id:String(x.id)})));
+const allItems=()=>CATEGORIES.flatMap(c=>items(c.id).map(x=>({...x,cat:c.id}))).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
 
-  <script>
-    /* =========================================================
-       문구 설정 (제목·설명·소개는 여기서만 바꾸면 됩니다)
-       ========================================================= */
-    const SITE = {
-      title: "조용한 서재",
-      tagline: "모아 둔 자료를 차분히 꺼내 보는 나만의 공간",
-      intro: "건강, 영업, 학업, 취미까지 그동안 모은 자료를 한곳에 정리해 두었습니다. "
-           + "필요할 때 천천히 꺼내 읽고, 새로 알게 된 것은 조금씩 더해 갑니다."
-    };
+const P={};
+P.home=()=>`<section class="hero" aria-label="첫 화면">${HERO_PHOTOS.map(u=>`<div class="slide" data-src="${esc(u)}"></div>`).join('')}
+<div class="txt"><h1>${esc(SITE.title)}</h1><p>${esc(SITE.tagline)}</p></div>
+${HERO_PHOTOS.length>1?`<div class="dots" aria-label="배경 사진 고르기">${HERO_PHOTOS.map((_,i)=>`<button type="button" aria-label="${i+1}번 사진">${i+1}</button>`).join('')}</div>`:''}</section>
+<section class="intro"><small>ABOUT</small><p>${esc(SITE.intro)}</p></section>
+<section class="wrap"><h2 class="h2">자료 분류</h2><p class="desc">카드를 누르면 그 분류의 자료 목록으로 이동합니다.</p>
+<div class="cards">${CATEGORIES.map((c,i)=>`<a class="card" href="#/library/${c.id}"><span class="num">${pad(i+1)}</span>${icon(c.icon)}<h3>${esc(c.name)}</h3><p>${esc(c.desc)}</p><span class="go">자료 보기 →</span></a>`).join('')}</div></section>
+<section class="faq"><div class="in"><h2 class="h2">처음 쓰실 때</h2><p class="desc">자주 헷갈리는 것만 모았습니다. 질문을 누르면 답이 펼쳐집니다.</p><div id="faq"></div></div></section>`;
+P.guide=()=>`<div class="page"><h1>처음 쓰실 때</h1><p class="sub1">질문을 누르면 답이 펼쳐집니다.</p><div id="faq"></div><div style="text-align:center;margin-top:24px"><a class="btn f" href="#/library/all">자료 보러 가기</a></div></div>`;
+P.library=(k,id)=>{k=CAT[k]?k:'all';
+const tabs=`<div class="tabs">${[['all','전체']].concat(CATEGORIES.map(c=>[c.id,c.name])).map(([t,n])=>`<a href="#/library/${t}" class="${t===k?'on':''}">${n}</a>`).join('')}</div>`;
+if(id&&k!=='all'){const p=items(k).find(x=>String(x.id)===id);if(!p)return `<div class="page"><p class="sub1">자료를 찾을 수 없어요.</p><div style="text-align:center"><a class="btn" href="#/library/${k}">목록으로</a></div></div>`;
+const mine=String(p.id).startsWith('u');
+return `<div class="page post"><span class="tag">${esc(CAT[k].name)}</span><h2>${esc(p.title)}</h2><div class="meta">${esc(p.date||'')}${mine?' · 이 브라우저에서 추가한 자료':''}</div>
+${p.link?`<a class="link" href="${esc(p.link)}" target="_blank" rel="noopener">원문 링크 열기 ↗</a>`:''}<p style="white-space:pre-wrap">${esc(p.body||'')}</p>
+${(p.imgs||[]).length?`<div class="pics">${p.imgs.map(u=>`<img src="${esc(u)}" alt="" loading="lazy" data-g="1">`).join('')}</div>`:''}
+<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:40px"><a class="btn" href="#/library/${k}">목록으로</a>${mine?`<a class="btn" data-del="${esc(p.id)}">삭제</a>`:''}</div></div>`}
+const list=k==='all'?allItems():items(k).map(x=>({...x,cat:k}));
+const head=k==='all'?['전체 자료','모든 분류의 자료를 최근 순으로 모았습니다.']:[CAT[k].name,CAT[k].desc];
+return `<div class="page"><h1>${esc(head[0])}</h1><p class="sub1">${esc(head[1])} · ${list.length}개</p>${tabs}
+${list.length?`<ul class="list">${list.map(p=>`<li><a href="#/library/${p.cat}/${esc(p.id)}">${k==='all'?`<span class="tag">${esc(CAT[p.cat].name)}</span>`:''}<b>${esc(p.title)}</b><span>${esc(p.date||'')}</span></a></li>`).join('')}</ul>`:'<p class="empty">아직 자료가 없어요. 자료가 생기면 이곳에 차곡차곡 쌓입니다.</p>'}
+${k==='all'?'':`<div class="bar"><a class="btn f" id="wr">자료 추가</a></div><form class="form" id="wf" hidden><label>제목<input name="title" required></label><label>링크 (선택)<input name="link" type="url" placeholder="https://"></label><label>사진 주소 (선택, 여러 개는 줄바꿈)<textarea name="imgs" rows="2"></textarea></label><label>메모<textarea name="body" rows="5"></textarea></label><button class="btn f" style="margin:0;justify-self:start">저장</button></form>`}</div>`};
 
-    /* =========================================================
-       첫 화면 배경 사진 (주소는 여기서만 바꾸면 됩니다)
-       맨 위 사진이 기본으로 보입니다. 하나로 정하면 그 주소만 남기세요.
-       ========================================================= */
-    const HERO_PHOTOS = [
-      "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=2000&q=80&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1511362328651-90cc517fbe31?w=2000&q=80&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1767786330387-5cef0327b6c1?w=2000&q=80&auto=format&fit=crop"
-    ];
-
-    /* =========================================================
-       분류와 자료 (자료를 넣을 때는 items 에 한 줄씩 추가)
-       예) items: [ { title: "혈압 관리 요령", date: "2026-10-30", link: "https://..." } ]
-       link 는 없어도 됩니다.
-       ========================================================= */
-    const CATEGORIES = [
-      { id: "health",  name: "건강", desc: "몸과 마음을 돌보는 정보",       icon: "heart",  items: [] },
-      { id: "sales",   name: "영업", desc: "현장에서 쓰는 영업 노하우",     icon: "brief",  items: [] },
-      { id: "study",   name: "학업", desc: "공부하며 정리한 내용",           icon: "book",   items: [] },
-      { id: "hobby",   name: "취미", desc: "즐겁게 배우고 모은 것들",        icon: "leaf",   items: [] },
-      { id: "etc",     name: "기타", desc: "어디에도 넣기 애매한 자료",      icon: "box",    items: [] }
-    ];
-
-    const heroEl = document.getElementById("hero");
-    const heroLayers = HERO_PHOTOS.map(function (url) {
-      const layer = document.createElement("div");
-      layer.className = "hero-photo";
-      layer.dataset.src = url;
-      heroEl.insertBefore(layer, heroEl.querySelector(".hero-inner"));
-      return layer;
-    });
-    function showHeroPhoto(index) {
-      heroLayers.forEach(function (layer, i) {
-        if (i === index && !layer.style.backgroundImage) {
-          layer.style.backgroundImage = 'url("' + layer.dataset.src + '")';
-        }
-        layer.classList.toggle("is-on", i === index);
-      });
-    }
-    showHeroPhoto(0);
-
-    /* ===== [사진 비교용 버튼 1·2·3] 비교가 끝나면 여기부터 ===== */
-    (function () {
-      const style = document.createElement("style");
-      style.textContent =
-        ".photo-picker{position:absolute;right:40px;bottom:32px;z-index:2;display:flex;gap:8px}" +
-        ".photo-picker button{width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.7);" +
-        "background:rgba(20,17,14,.35);color:#fff;font:600 18px/1 var(--font);cursor:pointer}" +
-        ".photo-picker button[aria-pressed=true]{background:#fff;color:var(--ink)}" +
-        "@media (max-width:640px){.photo-picker{right:20px;bottom:20px}}";
-      document.head.appendChild(style);
-
-      const picker = document.createElement("div");
-      picker.className = "photo-picker";
-      picker.setAttribute("aria-label", "배경 사진 고르기");
-      HERO_PHOTOS.forEach(function (url, i) {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.textContent = i + 1;
-        btn.setAttribute("aria-label", (i + 1) + "번 사진");
-        btn.setAttribute("aria-pressed", i === 0);
-        btn.addEventListener("click", function () {
-          showHeroPhoto(i);
-          picker.querySelectorAll("button").forEach(function (b, j) {
-            b.setAttribute("aria-pressed", j === i);
-          });
-        });
-        picker.appendChild(btn);
-      });
-      heroEl.appendChild(picker);
-    })();
-    /* ===== [사진 비교용 버튼 1·2·3] 여기까지 지우면 됩니다 ===== */
-
-    document.title = SITE.title;
-    document.querySelectorAll("[data-site]").forEach(function (el) {
-      el.textContent = SITE[el.dataset.site];
-    });
-
-    const ICONS = {
-      heart: '<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>',
-      brief: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 13h18"/>',
-      book:  '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5M8 7h7"/>',
-      leaf:  '<path d="M5 19C5 10 11 5 20 4c-1 9-6 15-15 15z"/><path d="M5 19l8-8"/>',
-      box:   '<path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/>'
-    };
-
-    function esc(text) {
-      const d = document.createElement("div");
-      d.textContent = text == null ? "" : String(text);
-      return d.innerHTML;
-    }
-    function pad(n) { return String(n).padStart(2, "0"); }
-
-    document.getElementById("cards").innerHTML = CATEGORIES.map(function (c, i) {
-      return '<li><a class="card" href="#list-' + c.id + '">'
-        + '<span class="num">' + pad(i + 1) + '</span>'
-        + '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[c.icon] + '</svg>'
-        + '<h3>' + esc(c.name) + '</h3>'
-        + '<p>' + esc(c.desc) + '</p>'
-        + '<span class="go">자료 보기 →</span>'
-        + '</a></li>';
-    }).join("");
-
-    document.getElementById("shelves").innerHTML = CATEGORIES.map(function (c, i) {
-      const list = c.items.length
-        ? '<ul class="items">' + c.items.map(function (it) {
-            const title = it.link
-              ? '<a href="' + esc(it.link) + '" target="_blank" rel="noopener">' + esc(it.title) + '</a>'
-              : esc(it.title);
-            return '<li>' + title + (it.date ? '<span class="date">' + esc(it.date) + '</span>' : '') + '</li>';
-          }).join("") + '</ul>'
-        : '<p class="empty">아직 자료가 없어요. 자료가 생기면 이곳에 차곡차곡 쌓입니다.</p>';
-      return '<article class="shelf" id="list-' + c.id + '">'
-        + '<div class="shelf-head"><span class="num">' + pad(i + 1) + '</span>'
-        + '<h3>' + esc(c.name) + '</h3>'
-        + '<a class="back" href="#categories">↑ 분류로 돌아가기</a></div>'
-        + list + '</article>';
-    }).join("");
-
-    const now = new Date();
-    const todayEl = document.getElementById("today");
-    todayEl.dateTime = now.getFullYear() + "-" + pad(now.getMonth() + 1) + "-" + pad(now.getDate());
-    todayEl.textContent = now.getFullYear() + "년 " + (now.getMonth() + 1) + "월 " + now.getDate() + "일";
-  </script>
+function route(){clearInterval(timer);const [a,b,c]=location.hash.replace(/^#\/?/,'').split('/').map(decodeURIComponent);let h;
+if(a==='library')h=P.library(b,c);else if(a==='guide')h=P.guide();else h=P.home();
+$('#app').innerHTML=h;scrollTo(0,0);
+faqInit();sliderInit();
+$$('img[data-g]').forEach((im,i,all)=>im.onclick=()=>showLB(all.map(x=>x.src),i));
+const k=CAT[b]?b:null;
+$$('[data-del]').forEach(x=>x.onclick=()=>{if(confirm('이 자료를 지울까요?')){store.set('items_'+k,local(k).filter(y=>String(y.id)!==x.dataset.del));location.hash='#/library/'+k}});
+const wr=$('#wr');if(wr)wr.onclick=()=>{const f=$('#wf');f.hidden=!f.hidden;if(!f.hidden)$('input',f).focus()};
+const wf=$('#wf');if(wf)wf.onsubmit=e=>{e.preventDefault();const f=Object.fromEntries(new FormData(wf));const l=local(k);
+l.unshift({id:'u'+Date.now(),title:f.title,link:f.link,body:f.body,imgs:f.imgs.split('\n').map(s=>s.trim()).filter(Boolean),date:fmt(new Date())});store.set('items_'+k,l);route()};
+}
+addEventListener('hashchange',route);route();
+</script>
 </body>
 </html>
