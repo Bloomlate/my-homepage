@@ -23,6 +23,7 @@ const HERO_PHOTOS=[
    자료를 넣을 때는 items 에 한 줄씩 추가합니다.
    예) {id:1,title:"혈압 관리 요령",date:"2026-10-30",link:"https://...",body:"메모",imgs:["https://.../사진.jpg"]}
    link, body, imgs 는 없어도 됩니다.
+   카드 사진을 따로 정하려면 분류에 photo:"사진주소" 를 넣으세요. (없으면 첫 화면 사진을 돌려 씁니다)
    화면의 [자료 추가] 버튼으로 넣은 자료는 이 브라우저에만 저장됩니다. */
 const CATEGORIES=[
 {id:"health",name:"건강",desc:"몸과 마음을 돌보는 정보",icon:"heart",items:[]},
